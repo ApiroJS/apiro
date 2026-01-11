@@ -1,6 +1,6 @@
 // Imports
-import initializeServer from './initializeServer.js';
-import { app } from './app.js';
+import initializeServer from './app/initializeServer.js';
+import { app } from './app/app.js';
 
 // Start the server
 
@@ -8,8 +8,8 @@ export async function listen() {
 
     (async () => {
         await initializeServer().then (async () => {
-        await app();
-        return
+            await app();
+            return
         })
     })()
 
