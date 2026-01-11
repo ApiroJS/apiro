@@ -4,8 +4,27 @@ import { db } from './db.js';
 import open from 'open';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { time } from 'console';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+async function logEvent(req, agent, host, path) {
+
+
+    await db.push('logs', {
+        time: {
+            now: Date.now(),
+            print: new Date().toLocaleString()
+        },
+        agent: agent,
+        host: host,
+        path: path,
+        overview: req,
+    })
+
+    return;
+    
+}
 
 export async function app() {
     try { 
@@ -21,17 +40,15 @@ export async function app() {
 
         })
 
-        app.get('/dashboard', (req, res) => {
-            // Build request params to review request info including IP address, user agent, etc.
-            res.send('Welcome to your dashboard!')
-        })
-
         app.get('/:path', async (req, res) => {
-            const path = req.params.path;
+            await logEvent(req, req.headers['user-agent'], req.headers['host'], req.path);
 
+            const path = req.params.path;
             const paths = await db.get('config.pages');
 
-            if (paths && paths[path]) {
+            if (path == 'dashboard') {
+                res.send('Welcome to your dashboard!')
+            } else if (paths && paths[path]) {
                 res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths[path].title}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths[path].content} </main> </body> </html>`);
                 return;
             } else {
@@ -42,11 +59,11 @@ export async function app() {
         })
 
         app.listen(config.port, () => {
-            console.log(`[EXOLITE] Access your dashboard at localhost:${config.port}/dashboard`);
+            console.log(`[ExoLite] Thank you for using our services!\nYour dashboard page will automatically open in your browser.\nTo access your dashboard manually, please visit localhost:${config.port}/dashboard`);
             open(`http://localhost:${config.port}/dashboard`);
         })
 
     } catch (error) {
-        console.error("[EXOLITE] Error initializing the dashboard:", error);
+        console.error("[ExoLite] Error initializing the dashboard:", error);
     }
 }

@@ -3,7 +3,6 @@ import initializeServer from './app/initializeServer.js';
 import { app } from './app/app.js';
 
 // Start the server
-
 export async function listen() {
 
     (async () => {

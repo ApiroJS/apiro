@@ -33,3 +33,10 @@ Installation is done using the
 ```bash
 npm install exolite
 ```
+
+## Features
+
+  * Any and all features that come with Express
+  * Additonal middleware, that acts as a blockade from vulnerabilities, & malicious attacks.
+  * User-friendly web-based dashboard to configure routes & environment settings.
+  * Request audit log, visible within the web-base dashboard
