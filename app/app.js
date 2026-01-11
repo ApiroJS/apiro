@@ -9,9 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function logEvent(req, agent, host, path) {
-
-
-    await db.push('logs', {
+    const logEntry = {
         time: {
             now: Date.now(),
             print: new Date().toLocaleString()
@@ -19,11 +17,13 @@ async function logEvent(req, agent, host, path) {
         agent: agent,
         host: host,
         path: path,
-        overview: req,
-    })
+        method: req.method, // Include HTTP method
+        url: req.url,       // Include request URL
+        headers: req.headers // Include headers if needed
+    };
 
+    await db.push('logs', logEntry);
     return;
-    
 }
 
 export async function app() {
