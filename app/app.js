@@ -47,7 +47,7 @@ export async function app() {
             const paths = await db.get('config.pages');
 
             if (path == 'dashboard') {
-                res.send('Welcome to your dashboard!')
+                res.send(`Welcome to your ExoLite Dashboard!<br><br>You're running ExoLite CMS on port ${config.port}.<br><br>You've got the following pages:<br><br>${Object.keys(paths).map(p => `- ${p}`).join('<br>')}<br><br>Your audit log has ${ (await db.get('logs')) ? (await db.get('logs')).length : 0 } entries. They are as follows: ${await db.get('logs') ? JSON.stringify(await db.get('logs')) : 'No log entries found.'}`);
             } else if (paths && paths[path]) {
                 res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths[path].title}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths[path].content} </main> </body> </html>`);
                 return;
