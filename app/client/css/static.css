@@ -353,6 +353,48 @@ main {
   font-size: 0.9rem;
 }
 
+/* Coming soon */
+.coming-soon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.coming-card {
+  max-width: 420px;
+  width: 100%;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  background: #ffffff;
+}
+
+.coming-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+}
+
+.coming-card h1 {
+  margin: 0 0 12px;
+  font-size: 1.8rem;
+}
+
+.coming-card p {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.coming-card .meta {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
 
 /* 404 CSS Styles */
 .block404 {
