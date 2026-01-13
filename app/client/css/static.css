@@ -277,6 +277,14 @@ main {
   color: #991b1b;
 }
 
+.normal {
+  background: #d3d3d3;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #000000;
+}
+
 /* Docs page */
 .docs {
   padding: 32px;

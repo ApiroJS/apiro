@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="status ${log.status >= 400 ? "error" : ""}">
             ${log.status}
           </span>
-          <span>${log.device}</span>
+          <span>${log.deviceType}</span>
           <span>${log.time}</span>
         </div>
       `;
@@ -64,6 +64,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           : ""
       }
 
+      <div class="detail-card full">
+              <h4>Agent</h4>
+              <p class="normal">${log.agent}</p>
+      </div>
+
       <div class="detail-grid">
         <div class="detail-card">
           <h4>Request</h4>
@@ -73,16 +78,34 @@ document.addEventListener("DOMContentLoaded", async () => {
             <li><span>Path</span><b>${log.path}</b></li>
             <li><span>Status</span><b>${log.status}</b></li>
             <li><span>Processing</span><b>${log.timing.proccessing}</b></li>
+            <li><span>Time of Request</span><b>${log.time}</b></li>
           </ul>
         </div>
 
         <div class="detail-card">
-          <h4>Client</h4>
+          <h4>Device & Client</h4>
           <ul>
+            <li><span>Operating System</span><b>${log.os}</b></li>
+            <li><span>Device Type</span><b>${log.deviceType}</b></li>
+            <li><span>Device Model</span><b>${log.deviceModel}</b></li>
+            <li><span>Device Vendor</span><b>${log.deviceVendor}</b></li>
+            <li><span>Engine Name</span><b>${log.engineName}</b></li>
+            <li><span>Engine Version</span><b>${log.engineVersion}</b></li>
+            <li><span>CPU Architecture</span><b>${log.cpu}</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Browser</h4>
+          <ul>
+            <li><span>Browser Name</span><b>${log.browserName}</b></li>
+            <li><span>Browser Version</span><b>${log.browserVersion}</b></li>
+            <li><span>Browser Major</span><b>${log.browserMajor}</b></li>
+            <li><span>Browser Type</span><b>${log.browserType}</b></li>
             <li><span>IP Address</span><b>${log.ip}</b></li>
-            <li><span>Device</span><b>${log.device}</b></li>
-            <li><span>OS</span><b>${log.os}</b></li>
-            <li><span>Browser</span><b>${log.browser}</b></li>
+            <li><span>Region</span><b>${log.region}</b></li>
           </ul>
         </div>
       </div>

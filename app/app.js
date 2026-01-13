@@ -7,13 +7,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { UAParser } from "ua-parser-js";
+import { EngineName } from 'ua-parser-js/enums';
 
 export async function app() {
     try { 
         const config = await db.get('config')
 
         const app = express()
-        app.set('trust proxy', true)
 
         app.use(async (req, res, next) => {
 
@@ -25,7 +25,16 @@ export async function app() {
 
                 // ---- User Agent Parsing ----
                 const parser = new UAParser(req.headers["user-agent"]);
-                const ua = parser.getResult();
+                const reqData = parser.getResult();
+                
+                const ip =
+                Array.isArray(req.ips) && req.ips.length > 0
+                    ? req.ips[0]
+                    : "Localhost";
+
+                const region =
+                    req.get("cf-ipcountry") ||
+                    (req.ip === "::1" || req.ip === "127.0.0.1" ? "Localhost" : "UNKNOWN");
 
                 // Event listener for when the response finishes
                 res.on('finish', async () => {
@@ -37,10 +46,20 @@ export async function app() {
                         status: res.statusCode,
                         flagged: false,
                         flagMessage: null,
-                        ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-                        device: ua.device.type || "Desktop",
-                        os: `${ua.os.name || "Unknown"} ${ua.os.version || ""}`.trim(),
-                        browser: `${ua.browser.name || "Unknown"} ${ua.browser.version || ""}`.trim(),
+                        ip: ip,
+                        agent: reqData.ua,
+                        deviceType: reqData.device.type || "Unknown",
+                        deviceModel: reqData.device.model || "Unknown",
+                        deviceVendor: reqData.device.vendor || "Unknown",
+                        os: `${reqData.os.name || "Unknown"} ${reqData.os.version || ""}` .replace(/\s\d+(\.\d+)*/g, "") .trim(),
+                        browserName: `${reqData.browser.name || "Unknown"}`,
+                        browserVersion: `${reqData.browser.version || "Unknown"}`,
+                        browserMajor: `${reqData.browser.major || "Unknown"}`,
+                        browserType: `${reqData.browser.type || "Unknown"}`,
+                        engineName: reqData.engine.name,
+                        engineVersion: reqData.engine.version,
+                        cpu: reqData.cpu.architecture,
+                        region: region,
                         time: new Date().toLocaleString(),
                         timing: {
                             proccessing: `${duration}ms`,
@@ -135,6 +154,7 @@ export async function app() {
 
         })
 
+        app.set('trust proxy', true)
         app.listen(config.port, () => {
             console.log(`[ExoLite] Thank you for using our services!\nYour dashboard page will automatically open in your browser.\nTo access your dashboard manually, please visit localhost:${config.port}/dashboard`);
             open(`http://localhost:${config.port}/dashboard/docs`);
