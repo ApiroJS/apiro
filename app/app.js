@@ -36,14 +36,8 @@ export async function app() {
                 await db.add(`analytics.browser.${browserName}`, 1)
                 await db.add(`analytics.path.${req.path}`, 1)
 
-                const ip =
-                Array.isArray(req.ips) && req.ips.length > 0
-                    ? req.ips[0]
-                    : "Localhost";
-
-                const region =
-                    req.get("cf-ipcountry") ||
-                    (req.ip === "::1" || req.ip === "127.0.0.1" ? "Localhost" : "UNKNOWN");
+                const ip = Array.isArray(req.ips) && req.ips.length > 0 ? req.ips[0] : "Localhost";
+                const region = req.get("cf-ipcountry") || (req.ip === "::1" || req.ip === "127.0.0.1" ? "Localhost" : "UNKNOWN");
 
                 async function pushLog(flag, flagMessage) {
                     const duration = Date.now() - start; // Calculate duration
@@ -103,41 +97,38 @@ export async function app() {
         });
 
         app.get('/client/:type/:fileName', async function (req, res) {
-
             const type = req.params.type
             const fileName = req.params.fileName
             res.sendFile(path.join(__dirname, `/client/${type}/${fileName}`));
-
         })
 
         app.get('/dashboard/:type/:fileName', async function (req, res) {
-
             const type = req.params.type
             const fileName = req.params.fileName
             res.sendFile(path.join(__dirname, `/client/${type}/${fileName}`));
-
         })
 
-        app.get('/api/analytics', async (req, res) => {
-            const analytics = await db.get('analytics');
-            res.json(analytics);
-        })
-        
-        app.get("/api/logs/:id", async (req, res) => {
-
-            const id = req.params.id;
-
-            if(id == 'all'){
-                const logs = ((await db.get('logs')) || []).slice().reverse();
-                return res.json(logs);
-            } else {
-                const logs = (await db.get('logs')) || [];
-                const log = logs.find(l => l.id === Number(id));
-                if (!log) return res.status(404).json({ error: "Log not found" });
-                return res.json(log);
+        app.get('/api/:route/:id', async (req, res) => {
+            const route = req.params.route
+            if(route == 'logs'){
+                const id = req.params.id;
+                if(id == 'all'){
+                    const logs = ((await db.get('logs')) || []).slice().reverse();
+                    return res.json(logs);
+                } else {
+                    const logs = (await db.get('logs')) || [];
+                    const log = logs.find(l => l.id === Number(id));
+                    if (!log) return res.status(404).json({ error: "Log not found" });
+                    return res.json(log);
+                }
+            } else if(route == 'analytics'){
+                const id = req.params.id;
+                if(id == 'all'){
+                    const analytics = await db.get('analytics');
+                    res.json(analytics);
+                }
             }
-
-        });
+        })
 
         app.get('/dashboard/:path', async (req, res) => {
 
@@ -168,25 +159,43 @@ export async function app() {
 
         })
 
+        // Pages
         app.get('/:path', async (req, res) => {
 
             const path = req.params.path;
-            const paths = await db.get('config.pages');
+            const paths = await db.get('pages');
 
             if (paths && paths[path]) {
                     await db.add('analytics.requests.visits', 1) // Path Visit
-                res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths[path].title}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths[path].content} </main> </body> </html>`);
+                res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths[path].headerTitle}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths[path].content} </main> </body> </html>`);
                 return;
             } else {
-                res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths['404'].title}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths['404'].content} </main> </body> </html>`);
+                res.send(`<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>${paths['404'].headerTitle}</title> <link rel="stylesheet" href="./client/css/static.css" /> </head> <body> <main> ${paths['404'].content} </main> </body> </html>`);
                 return;
             }
 
         })
 
+        // Workers
+        app.get("/worker/:path", (req, res) => {
+            const path = req.params.path;
+            res.type("application/javascript").send(storedJs);
+
+            /*
+            Option 1 — Script tag
+            <script src="/dynamic/script.js"></script>
+
+            Option 2 — Dynamic import
+            import("/dynamic/script.js").then(() => {
+                console.log("Dynamic JS loaded");
+            });
+            */
+
+        });
+
         app.set('trust proxy', true)
         app.listen(config.port, () => {
-            console.log(`[ExoLite] Thank you for using our services!\nYour dashboard page will automatically open in your browser.\nTo access your dashboard manually, please visit localhost:${config.port}/dashboard/overview`);
+            console.log(`[APIRO] Your dashboard page will automatically open in your browser. To access your dashboard manually, please visit localhost:${config.port}/dashboard/overview`);
             open(`http://localhost:${config.port}/dashboard/overview`);
         })
 

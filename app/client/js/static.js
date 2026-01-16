@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 async function fetchAnalytics() {
-  const res = await fetch("/api/analytics");
+  const res = await fetch("/api/analytics/all");
   if (!res.ok) throw new Error("Failed to fetch KPI Data");
   return res.json();
 }
