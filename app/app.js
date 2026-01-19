@@ -8,12 +8,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { UAParser } from "ua-parser-js";
 import { isBot, isAICrawler, isAIAssistant } from 'ua-parser-js/bot-detection';
+const cors = require('cors');
 
 export async function app() {
     try { 
         const config = await db.get('config')
 
         const app = express()
+        app.set('trust proxy', true)
+        app.use(cors());
 
         app.use(async (req, res, next) => {
 
@@ -193,7 +196,6 @@ export async function app() {
 
         });
 
-        app.set('trust proxy', true)
         app.listen(config.port, () => {
             console.log(`[APIRO] Your dashboard page will automatically open in your browser. To access your dashboard manually, please visit localhost:${config.port}/dashboard/overview`);
             open(`http://localhost:${config.port}/dashboard/overview`);
