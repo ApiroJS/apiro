@@ -6,130 +6,49 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { UAParser } from "ua-parser-js";
-import { isBot, isAICrawler, isAIAssistant } from 'ua-parser-js/bot-detection';
-const cors = require('cors');
+import cors from 'cors';
+import { middleware } from './middleware.js'
 
 export async function app() {
     try { 
         const config = await db.get('config')
-
         const app = express()
-        app.set('trust proxy', true)
-        app.use(cors());
 
+        // Middleware
         app.use(async (req, res, next) => {
-
-            await db.add('analytics.requests.all', 1) // Requests - Logs all traffic
-
-            if(!(req.path).includes('.js') && !(req.path).includes('.css') && !(req.path).includes('.ico') && !(req.path).includes('api')){
-
-                await db.add('lastLog', 1)
-                const newLog = await db.get('lastLog')
-                const start = Date.now(); // Capture start time
-
-                // ---- User Agent Parsing ----
-                const parser = new UAParser(req.headers["user-agent"]);
-                const reqData = parser.getResult();
-
-                // ---- Analytics ----
-                const osName = reqData.os.name || "Unknown";
-                const browserName = reqData.browser.name || "Unknown";
-                await db.add(`analytics.os.${osName}`, 1)
-                await db.add(`analytics.browser.${browserName}`, 1)
-                await db.add(`analytics.path.${req.path}`, 1)
-
-                const ip = Array.isArray(req.ips) && req.ips.length > 0 ? req.ips[0] : "Localhost";
-                const region = req.get("cf-ipcountry") || (req.ip === "::1" || req.ip === "127.0.0.1" ? "Localhost" : "UNKNOWN");
-
-                async function pushLog(flag, flagMessage) {
-                    const duration = Date.now() - start; // Calculate duration
-                    const logEntry = {
-                        id: newLog,
-                        method: req.method,
-                        path: req.path,
-                        status: res.statusCode,
-                        flagged: flag,
-                        note: flagMessage,
-                        ip: ip,
-                        agent: reqData.ua,
-                        deviceType: reqData.device.type || "Unknown",
-                        deviceModel: reqData.device.model || "Unknown",
-                        deviceVendor: reqData.device.vendor || "Unknown",
-                        os: osName,
-                        browserName: browserName,
-                        browserVersion: `${reqData.browser.version || "Unknown"}`,
-                        browserMajor: `${reqData.browser.major || "Unknown"}`,
-                        browserType: `${reqData.browser.type || "Unknown"}`,
-                        engineName: reqData.engine.name,
-                        engineVersion: reqData.engine.version,
-                        cpu: reqData.cpu.architecture,
-                        region: region,
-                        aiCrailer: isAICrawler(req.headers["user-agent"]),
-                        aiAssistant: isAIAssistant(req.headers["user-agent"]),
-                        bot: isBot(req.headers["user-agent"]),
-                        time: new Date().toLocaleString(),
-                        timing: {
-                            proccessing: `${duration}ms`,
-                        },
-                    };
-                    await db.push('logs', logEntry);
-                    return;
-                }
-
-                if(isAICrawler(req.headers["user-agent"]) || isAIAssistant(req.headers["user-agent"]) || isBot(req.headers["user-agent"])){
-                    // Event listener for when the response finishes
-                    res.on('finish', async () => {
-                        await pushLog(true, 'Flagged for being marked either a Bot, AI Crawler, or AI Assistant. Please reveiew the log\'s security notes for further details.').then (async () => {
-                            return;
-                        })
-                    });
-                } else {
-                    // Event listener for when the response finishes
-                    res.on('finish', async () => {
-                        await pushLog(false, null).then (async () => {
-                            return;
-                        })
-                    });
-                }
-
-            } else {
-                await db.add('analytics.requests.hidden', 1) // Requests - Hidden Traffic
-            }
-            next(); // Pass control to the next middleware/route handler
+            await middleware(req, res)
+            next();
         });
 
-        app.get('/client/:type/:fileName', async function (req, res) {
-            const type = req.params.type
-            const fileName = req.params.fileName
-            res.sendFile(path.join(__dirname, `/client/${type}/${fileName}`));
-        })
-
-        app.get('/dashboard/:type/:fileName', async function (req, res) {
-            const type = req.params.type
-            const fileName = req.params.fileName
-            res.sendFile(path.join(__dirname, `/client/${type}/${fileName}`));
-        })
-
-        app.get('/api/:route/:id', async (req, res) => {
+        // UI Elemenets Rendering
+        app.get('/:route/:fileType/:fileName', async function (req, res) {
             const route = req.params.route
-            if(route == 'logs'){
-                const id = req.params.id;
-                if(id == 'all'){
-                    const logs = ((await db.get('logs')) || []).slice().reverse();
-                    return res.json(logs);
+            const fileType = req.params.fileType
+            const fileName = req.params.fileName
+            if(route == 'client' || route == 'dashboard'){
+                res.sendFile(path.join(__dirname, `/client/${fileType}/${fileName}`));
+            } else if(route == 'api'){
+                if(fileType == 'logs'){
+                    if(fileName == 'all'){
+                        const logs = ((await db.get('logs')) || []).slice().reverse();
+                        return res.json(logs);
+                    } else {
+                        const id = fileName;
+                        const logs = (await db.get('logs')) || [];
+                        const log = logs.find(l => l.id === Number(id));
+                        if (!log) return res.status(404).json({ error: "Log not found" });
+                        return res.json(log);
+                    }
+                } else if(fileType == 'analytics'){
+                    if(fileName == 'all'){
+                        const analytics = await db.get('analytics');
+                        res.json(analytics);
+                    }
                 } else {
-                    const logs = (await db.get('logs')) || [];
-                    const log = logs.find(l => l.id === Number(id));
-                    if (!log) return res.status(404).json({ error: "Log not found" });
-                    return res.json(log);
+                    console.error('UI Asset rendering error.')
                 }
-            } else if(route == 'analytics'){
-                const id = req.params.id;
-                if(id == 'all'){
-                    const analytics = await db.get('analytics');
-                    res.json(analytics);
-                }
+            } else {
+                console.error('UI Asset rendering error.')
             }
         })
 
@@ -196,6 +115,8 @@ export async function app() {
 
         });
 
+        app.set('trust proxy', true)
+        app.use(cors())
         app.listen(config.port, () => {
             console.log(`[APIRO] Your dashboard page will automatically open in your browser. To access your dashboard manually, please visit localhost:${config.port}/dashboard/overview`);
             open(`http://localhost:${config.port}/dashboard/overview`);
