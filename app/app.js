@@ -200,6 +200,6 @@ export async function app() {
         })
 
     } catch (error) {
-        console.error("[ExoLite] Error initializing the dashboard:", error);
+        console.error("[APIRO] Error initializing the dashboard:", error);
     }
 }

@@ -1,0 +1,115 @@
+<!DOCTYPE html> 
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <title>Dashboard</title>
+      <!-- Icons (Lucide via CDN) --> <script src="https://unpkg.com/lucide@latest"></script> 
+      <link rel="stylesheet" href="./css/static.css" />
+   </head>
+   <body>
+      <aside class="sidebar" id="sidebar">
+         <div class="sidebar-header"> <span class="logo">Dashboard</span></div>
+         <nav class="nav"> 
+            <a href="http://localhost:${config.port}/dashboard/overview" class="nav-item" data-page="overview"> 
+                <i data-lucide="file-text"></i> 
+                <span>Overview</span> 
+            </a> 
+            <a href="http://localhost:${config.port}/dashboard/docs" class="nav-item" data-page="docs"> 
+                <i data-lucide="book"></i> 
+                <span>Documentation</span> 
+            </a> 
+            <a href="http://localhost:${config.port}/dashboard/config" class="nav-item" data-page="config"> 
+                <i data-lucide="settings"></i> 
+                <span>Configuration</span> 
+            </a> 
+            <a href="#" class="nav-item active" data-page="pages"> 
+                <i data-lucide="layout"></i> 
+                <span>Pages</span> 
+            </a> 
+            <a href="http://localhost:${config.port}/dashboard/workers" class="nav-item" data-page="workers"> 
+                <i data-lucide="users"></i> 
+                <span>Workers</span> 
+            </a> 
+        </nav>
+      </aside>
+      <!-- MAIN CONTENT --> 
+      <main class="content">
+
+         <div class="pages-layout">
+
+         <!-- LEFT: FILE TREE -->
+         <aside class="pages-tree">
+
+            <div class="tree-toolbar">
+               <span class="tree-title">Pages</span>
+               <button class="tree-add-btn" id="newPageBtn">+</button>
+            </div>
+
+            <!-- THIS IS REQUIRED -->
+            <div class="tree"></div>
+
+         </aside>
+
+         <!-- RIGHT: PREVIEW -->
+         <section class="pages-preview">
+
+            <div class="preview-empty">
+               Select a file to preview its contents
+            </div>
+
+            <div class="preview-content hidden">
+            <div class="preview-header" id="previewFilename">
+               <button id="deletePageBtn" class="btn danger" style="font-size:12px;">
+                  Delete
+               </button>
+            </div>
+
+            <textarea
+               class="preview-body editor"
+               id="previewBody"
+               spellcheck="false"
+            ></textarea>
+            </div>
+         </section>
+
+         </div>
+      </main>
+
+      <div class="modal-overlay hidden" id="newPageModal">
+         <div class="modal">
+            <h3>Create New Page</h3>
+
+            <form id="newPageForm">
+               <label>
+               Page Name
+               <input type="text" name="name" placeholder="example" required />
+               </label>
+
+               <label>
+               File Type
+               <select name="type" required>
+                  <option value="html">HTML</option>
+                  <option value="css">CSS</option>
+                  <option value="js">JavaScript</option>
+               </select>
+               </label>
+
+               <label>
+               Parent Folder
+                  <select name="parent">
+                     <option value="">/ (Root)</option>
+                  </select>
+               </label>
+
+               <div class="modal-actions">
+               <button type="button" class="btn secondary" id="cancelNewPage">Cancel</button>
+               <button type="submit" class="btn primary">Create</button>
+               </div>
+            </form>
+         </div>
+      </div>
+
+      <script src="./js/pages.js"></script>
+      <script src="./js/static.js"></script> 
+   </body>
+</html>
