@@ -34,6 +34,8 @@ async function init() {
 
 export default async function initializeServer() {
     try {
+
+        
         const config = await db.get('config')
 
         if(config.setupComplete) {
